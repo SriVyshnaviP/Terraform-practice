@@ -1,0 +1,39 @@
+ubuntu@ip-172-31-2-251:~/tf$ cat ec2.tf
+resource "aws_instance" "web_server" {
+count=2
+  ami           = "ami-02b8269d5e85954ef" # Replace with a valid AMI ID for your region
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.my_subnet.id
+ vpc_security_group_ids      = [aws_security_group.web_sg.id]
+  associate_public_ip_address = true
+  key_name      = "aws-ec2-pem-key" # Replace with your key pair name
+  tags = {
+    Name = "MyWebServer"
+  }
+}
+ubuntu@ip-172-31-2-251:~/tf$ cat secgroup.tf
+
+resource "aws_security_group" "web_sg" {
+  name        = "web-sg"
+  description = "Allow SSH"
+  vpc_id      = aws_vpc.my_vpc.id
+
+  ingress {
+    description = "Allow SSH from anywhere"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # 🚨 Works but not advisable for production
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "SSH-SG"
+  }
+}
